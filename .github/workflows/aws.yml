@@ -97,7 +97,7 @@ jobs:
         # push it to ECR so that it can
         # be deployed to ECS.
         docker build -t mutante .
-        docker tag mutante:latest 553045868175.dkr.ecr.us-east-2.amazonaws.com/$IMAGE_TAG
+        docker tag mutante:latest 553045868175.dkr.ecr.us-east-2.amazonaws.com/mutante:$IMAGE_TAG
         docker push 553045868175.dkr.ecr.us-east-2.amazonaws.com/mutante:$IMAGE_TAG
 
 
