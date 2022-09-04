@@ -10,20 +10,7 @@ on:
     branches: [ "master" ]
 
 jobs:
-  runner-job:
-    runs-on: ubuntu-latest
-    services:
-      redis:
-        image: redis
-        # Establece revisiones de estado para esperar hasta que Redis haya comenzado
-        options: >-
-          --health-cmd "redis-cli ping"
-          --health-interval 10s
-          --health-timeout 5s
-          --health-retries 5
-        ports:
-          # Asigna el puerto 6379 en el contenedor de servicio al host
-          - 6379:6379
+  
   build:
 
     runs-on: ubuntu-latest
