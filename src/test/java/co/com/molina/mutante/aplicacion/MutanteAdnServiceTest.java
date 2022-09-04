@@ -1,45 +1,96 @@
 package co.com.molina.mutante.aplicacion;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.util.List;
 
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+
+import co.com.molina.mutante.infraestructura.repositorio.redis.AdnData;
+import co.com.molina.mutante.infraestructura.repositorio.redis.AdnDataRepositorio;
+import co.com.molina.mutante.infraestructura.repositorio.redis.StatsAdnData;
+import co.com.molina.mutante.infraestructura.repositorio.redis.StatsAdnDataRepositorio;
 
 @SpringBootTest
 class MutanteAdnServiceTest {
 	@Autowired
 	private MutanteAdnService mutanteAdnService;
+	
+	@Autowired
+	private AdnDataRepositorio adnDataRepositorio;
+	@Autowired
+	private StatsAdnDataRepositorio statsRepositorio;
 
+	@BeforeEach
+	public void before() {
+		adnDataRepositorio.borrarDatos();
+		statsRepositorio.borrarDatos();
+	}
+	
 	@Test
 	void debeValidarLaSecuenciaNoTengaValorNull() {
-		assertFalse(mutanteAdnService.isMutant(null), "adn null no es mutante.");
+		assertFalse(mutanteAdnService.procesar(null), "adn null no es mutante.");
+		assertEquals(null, adnDataRepositorio.buscarUltimo());
+		assertEquals(null, statsRepositorio.buscarStatsEnCache());
+		
 	}
 
 	@Test
 	void casoBasicoExitoso() {
-		assertTrue(mutanteAdnService.isMutant(List.of("AAAA", "TTTT", "CCCC", "TCGA")), "Es Mutante.");
+		List<String> adn = List.of("AAAA", "TTTT", "CCCC", "TCGA");
+		assertTrue(mutanteAdnService.procesar(adn), "Es Mutante.");
+
+		StatsAdnData stats = statsRepositorio.buscarStatsEnCache();
+		assertEquals(1, stats.getCantidadHumanos());
+		assertEquals(1, stats.getCantidadMutantes());
+		assertEquals(1, stats.getPorcentajeMutantes());
+		
+		AdnData saveData = adnDataRepositorio.buscarUltimo();
+		assertEquals(true, saveData.isMutante());
+		assertEquals(adn, saveData.getAdn());
 	}
 
 	@Test
 	void debeValidarMinimo2SecuenciaCon4LetrasIgualesEnDistintasHorizontales() {
-		assertFalse(mutanteAdnService.isMutant(List.of("AAA", "TTT", "CCC")), "solo 3 letras iguales .");
-		assertFalse(mutanteAdnService.isMutant(List.of("AAAG", "TTTA", "CCCA", "GGGT")), "solo 3 letras iguales .");
-		assertFalse(mutanteAdnService.isMutant(List.of("AAAA", "TGCT", "CGGT", "TCGA")), "solo 1 sec, no es mutante.");
-		assertTrue(mutanteAdnService.isMutant(List.of("AAAA", "TTTT", "CGGT", "TCGA")), "minimo 2 sec, Es Mutante.");
-		assertTrue(mutanteAdnService.isMutant(List.of("TCAG", "TAAT", "CCCC", "GGGG")), "minimo 2 sec, Es Mutante.");
+		assertFalse(mutanteAdnService.procesar(List.of("AAA", "TTT", "CCC")), "solo 3 letras iguales .");
+		assertFalse(mutanteAdnService.procesar(List.of("AAAG", "TTTA", "CCCA", "GGGT")), "solo 3 letras iguales .");
+		assertFalse(mutanteAdnService.procesar(List.of("AAAA", "TGCT", "CGGT", "TCGA")), "solo 1 sec, no es mutante.");
+		assertTrue(mutanteAdnService.procesar(List.of("AAAA", "TTTT", "CGGT", "TCGA")), "minimo 2 sec, Es Mutante.");
+		List<String> adn = List.of("TCAG", "TAAT", "CCCC", "GGGG");
+		assertTrue(mutanteAdnService.procesar(adn), "minimo 2 sec, Es Mutante.");
+		
+		StatsAdnData stats = statsRepositorio.buscarStatsEnCache();
+		assertEquals(5, stats.getCantidadHumanos());
+		assertEquals(2, stats.getCantidadMutantes());
+		assertEquals(2/5, stats.getPorcentajeMutantes());
+		
+		AdnData saveData = adnDataRepositorio.buscarUltimo();
+		assertEquals(true, saveData.isMutante());
+		assertEquals(adn, saveData.getAdn());
 	}
 	
 	@Test
 	void debeValidarMinimo2SecuenciaCon4LetrasIgualesEnDistintasVerticales() {
-		assertFalse(mutanteAdnService.isMutant(List.of("ATG", "ATG", "ATG")), "solo 3 letras iguales .");
-		assertFalse(mutanteAdnService.isMutant(List.of("ATGA", "ATGA", "ATGA", "GGAG")), "solo 3 letras iguales .");
-		assertFalse(mutanteAdnService.isMutant(List.of("ATGC", "ATGC", "ATGC", "AGCA")), "solo 1 sec, no es mutante.");
-		assertTrue(mutanteAdnService.isMutant(List.of("ATGC", "ATGC", "ATGC", "ATCG")), "minimo 2 sec, Es Mutante.");
-		assertTrue(mutanteAdnService.isMutant(List.of("ATCG", "ATGC", "ATGC", "ATGC")), "minimo 2 sec, Es Mutante.");
+		assertFalse(mutanteAdnService.procesar(List.of("ATG", "ATG", "ATG")), "solo 3 letras iguales .");
+		assertFalse(mutanteAdnService.procesar(List.of("ATGA", "ATGA", "ATGA", "GGAG")), "solo 3 letras iguales .");
+		assertFalse(mutanteAdnService.procesar(List.of("ATGC", "ATGC", "ATGC", "AGCA")), "solo 1 sec, no es mutante.");
+		assertTrue(mutanteAdnService.procesar(List.of("ATGC", "ATGC", "ATGC", "ATCG")), "minimo 2 sec, Es Mutante.");
+		List<String> adn = List.of("ATCG", "ATGC", "ATGC", "ATGC");
+		assertTrue(mutanteAdnService.procesar(adn), "minimo 2 sec, Es Mutante.");
+		
+		StatsAdnData stats = statsRepositorio.buscarStatsEnCache();
+		assertEquals(5, stats.getCantidadHumanos());
+		assertEquals(2, stats.getCantidadMutantes());
+		assertEquals(2/5, stats.getPorcentajeMutantes());
+		
+		AdnData saveData = adnDataRepositorio.buscarUltimo();
+		assertEquals(true, saveData.isMutante());
+		assertEquals(adn, saveData.getAdn());
 	}
 	
 	@Test
@@ -51,7 +102,16 @@ class MutanteAdnServiceTest {
 				"AGATGG",
 				"CCCCTA",
 				"TCACTG");
-		assertTrue(mutanteAdnService.isMutant(adn), "2 sec, Es Mutante.");
+		assertTrue(mutanteAdnService.procesar(adn), "2 sec, Es Mutante.");
+		
+		StatsAdnData stats = statsRepositorio.buscarStatsEnCache();
+		assertEquals(1, stats.getCantidadHumanos());
+		assertEquals(1, stats.getCantidadMutantes());
+		assertEquals(1, stats.getPorcentajeMutantes());
+		
+		AdnData saveData = adnDataRepositorio.buscarUltimo();
+		assertEquals(true, saveData.isMutante());
+		assertEquals(adn, saveData.getAdn());
 	}
 	
 	@Test
@@ -63,7 +123,16 @@ class MutanteAdnServiceTest {
 				"AGAAGG",
 				"CCTCTA",
 				"TCACTG");
-		assertTrue(mutanteAdnService.isMutant(adn), "2 sec, Es Mutante.");
+		assertTrue(mutanteAdnService.procesar(adn), "2 sec, Es Mutante.");
+		
+		StatsAdnData stats = statsRepositorio.buscarStatsEnCache();
+		assertEquals(1, stats.getCantidadHumanos());
+		assertEquals(1, stats.getCantidadMutantes());
+		assertEquals(1, stats.getPorcentajeMutantes());
+		
+		AdnData saveData = adnDataRepositorio.buscarUltimo();
+		assertEquals(true, saveData.isMutante());
+		assertEquals(adn, saveData.getAdn());
 	}
 	
 	@Test
@@ -75,7 +144,7 @@ class MutanteAdnServiceTest {
 				"AGAAGG",
 				"CCGCTA",
 				"TCAGTG");
-		assertTrue(mutanteAdnService.isMutant(adn), "2 sec, Es Mutante.");
+		assertTrue(mutanteAdnService.procesar(adn), "2 sec, Es Mutante.");
 		
 		adn = List.of(
 				"ATGCGA",
@@ -84,7 +153,7 @@ class MutanteAdnServiceTest {
 				"ATAATG",
 				"CCTCTA",
 				"TCAGTG");
-		assertTrue(mutanteAdnService.isMutant(adn), "2 sec, Es Mutante.");
+		assertTrue(mutanteAdnService.procesar(adn), "2 sec, Es Mutante.");
 		
 		adn = List.of(
 				"ATGCGA",
@@ -93,7 +162,16 @@ class MutanteAdnServiceTest {
 				"AGAATG",
 				"CCGCTA",
 				"TCAGTG");
-		assertTrue(mutanteAdnService.isMutant(adn), "2 sec, Es Mutante.");
+		assertTrue(mutanteAdnService.procesar(adn), "2 sec, Es Mutante.");
+		
+		StatsAdnData stats = statsRepositorio.buscarStatsEnCache();
+		assertEquals(3, stats.getCantidadHumanos());
+		assertEquals(3, stats.getCantidadMutantes());
+		assertEquals(1, stats.getPorcentajeMutantes());
+		
+		AdnData saveData = adnDataRepositorio.buscarUltimo();
+		assertEquals(true, saveData.isMutante());
+		assertEquals(adn, saveData.getAdn());
 	}
 	
 	@Test
@@ -106,7 +184,7 @@ class MutanteAdnServiceTest {
 				"TGAATG",
 				"CCTCTA",
 				"TCAGTG");
-		assertTrue(mutanteAdnService.isMutant(adn), "2 sec, Es Mutante.");
+		assertTrue(mutanteAdnService.procesar(adn), "2 sec, Es Mutante.");
 		
 		adn = List.of(
 				"ATGTAA",
@@ -115,7 +193,7 @@ class MutanteAdnServiceTest {
 				"TAAGGG",
 				"CCTATA",
 				"TCAGTG");
-		assertTrue(mutanteAdnService.isMutant(adn), "2 sec, Es Mutante.");
+		assertTrue(mutanteAdnService.procesar(adn), "2 sec, Es Mutante.");
 		
 		adn = List.of(
 				"ATGTGA",
@@ -124,7 +202,7 @@ class MutanteAdnServiceTest {
 				"TAAGGG",
 				"ACTATA",
 				"TCAGTG");
-		assertTrue(mutanteAdnService.isMutant(adn), "2 sec, Es Mutante.");
+		assertTrue(mutanteAdnService.procesar(adn), "2 sec, Es Mutante.");
 		
 		adn = List.of(
 				"ATGTGA",
@@ -133,7 +211,7 @@ class MutanteAdnServiceTest {
 				"TAAGAG",
 				"ACTATA",
 				"TCAGTG");
-		assertTrue(mutanteAdnService.isMutant(adn), "2 sec, Es Mutante.");
+		assertTrue(mutanteAdnService.procesar(adn), "2 sec, Es Mutante.");
 		
 		adn = List.of(
 				"ATGTGA",
@@ -142,7 +220,7 @@ class MutanteAdnServiceTest {
 				"TAATAG",
 				"ACTAGA",
 				"TCAGTG");
-		assertFalse(mutanteAdnService.isMutant(adn), "1 sec, No Es Mutante.");
+		assertFalse(mutanteAdnService.procesar(adn), "1 sec, No Es Mutante.");
 		
 		adn = List.of(
 				"ATGTGA",
@@ -151,7 +229,7 @@ class MutanteAdnServiceTest {
 				"TAATAG",
 				"ACTAGA",
 				"TTAGTG");
-		assertTrue(mutanteAdnService.isMutant(adn), "2 sec, Es Mutante.");
+		assertTrue(mutanteAdnService.procesar(adn), "2 sec, Es Mutante.");
 		
 		adn = List.of(
 				"ATGTGAA",
@@ -161,7 +239,16 @@ class MutanteAdnServiceTest {
 				"ACTTGAA",
 				"TTAGTGC",
 				"TTGGTGC");
-		assertTrue(mutanteAdnService.isMutant(adn), "2 sec, Es Mutante.");
+		assertTrue(mutanteAdnService.procesar(adn), "2 sec, Es Mutante.");
+		
+		StatsAdnData stats = statsRepositorio.buscarStatsEnCache();
+		assertEquals(7, stats.getCantidadHumanos());
+		assertEquals(6, stats.getCantidadMutantes());
+		assertEquals(6/7, stats.getPorcentajeMutantes());
+		
+		AdnData saveData = adnDataRepositorio.buscarUltimo();
+		assertEquals(true, saveData.isMutante());
+		assertEquals(adn, saveData.getAdn());
 	}
 	
 	@Test
@@ -173,7 +260,16 @@ class MutanteAdnServiceTest {
 				"AAAAGG",
 				"CCTCTA",
 				"TCACTG");
-		assertTrue(mutanteAdnService.isMutant(adn), "2 sec, Es Mutante.");
+		assertTrue(mutanteAdnService.procesar(adn), "2 sec, Es Mutante.");
+		
+		StatsAdnData stats = statsRepositorio.buscarStatsEnCache();
+		assertEquals(1, stats.getCantidadHumanos());
+		assertEquals(1, stats.getCantidadMutantes());
+		assertEquals(1, stats.getPorcentajeMutantes());
+		
+		AdnData saveData = adnDataRepositorio.buscarUltimo();
+		assertEquals(true, saveData.isMutante());
+		assertEquals(adn, saveData.getAdn());
 	}
 	
 	@Test
@@ -187,7 +283,16 @@ class MutanteAdnServiceTest {
 				"CTGACTTT",
 				"AACCCTAG",
 				"ATGCGAAG");
-		assertTrue(mutanteAdnService.isMutant(adn), "2 sec, Es Mutante.");
+		assertTrue(mutanteAdnService.procesar(adn), "2 sec, Es Mutante.");
+		
+		StatsAdnData stats = statsRepositorio.buscarStatsEnCache();
+		assertEquals(1, stats.getCantidadHumanos());
+		assertEquals(1, stats.getCantidadMutantes());
+		assertEquals(1, stats.getPorcentajeMutantes());
+		
+		AdnData saveData = adnDataRepositorio.buscarUltimo();
+		assertEquals(true, saveData.isMutante());
+		assertEquals(adn, saveData.getAdn());
 	}
 	
 
@@ -202,7 +307,7 @@ class MutanteAdnServiceTest {
 				"CTGACTTT",
 				"AACCCTAG",
 				"ATGCGAAG");
-		assertTrue(mutanteAdnService.isMutant(adn), "2 sec, Es Mutante.");
+		assertTrue(mutanteAdnService.procesar(adn), "2 sec, Es Mutante.");
 		
 		adn = List.of(
 				"ATGACTAT",
@@ -213,7 +318,7 @@ class MutanteAdnServiceTest {
 				"CTGACTTG",
 				"AACCCTAG",
 				"ATGCGAAT");
-		assertTrue(mutanteAdnService.isMutant(adn), "2 sec, Es Mutante.");
+		assertTrue(mutanteAdnService.procesar(adn), "2 sec, Es Mutante.");
 		
 		adn = List.of(
 				"ATGACTAT",
@@ -224,7 +329,16 @@ class MutanteAdnServiceTest {
 				"CTGCCTTG",
 				"AACCCTAG",
 				"ATGCGAAT");
-		assertTrue(mutanteAdnService.isMutant(adn), "2 sec, Es Mutante.");
+		assertTrue(mutanteAdnService.procesar(adn), "2 sec, Es Mutante.");
+		
+		StatsAdnData stats = statsRepositorio.buscarStatsEnCache();
+		assertEquals(3, stats.getCantidadHumanos());
+		assertEquals(3, stats.getCantidadMutantes());
+		assertEquals(1, stats.getPorcentajeMutantes());
+		
+		AdnData saveData = adnDataRepositorio.buscarUltimo();
+		assertEquals(true, saveData.isMutante());
+		assertEquals(adn, saveData.getAdn());
 	}
 	
 	@Test
@@ -240,7 +354,16 @@ class MutanteAdnServiceTest {
 				"CTGACTTT",
 				"AACCCTAG",
 				"ATGCGAAG");
-		assertFalse(mutanteAdnService.isMutant(adn), "1 sec, NO es mutante.");
+		assertFalse(mutanteAdnService.procesar(adn), "1 sec, NO es mutante.");
+		
+		StatsAdnData stats = statsRepositorio.buscarStatsEnCache();
+		assertEquals(1, stats.getCantidadHumanos());
+		assertEquals(0, stats.getCantidadMutantes());
+		assertEquals(0, stats.getPorcentajeMutantes());
+		
+		AdnData saveData = adnDataRepositorio.buscarUltimo();
+		assertEquals(false, saveData.isMutante());
+		assertEquals(adn, saveData.getAdn());
 	}
 	
 	@Test
@@ -256,12 +379,21 @@ class MutanteAdnServiceTest {
 				"ATGACTTT",
 				"AACCCTAG",
 				"ATGCGAAG");
-		assertFalse(mutanteAdnService.isMutant(adn), "1 sec, NO es mutante.");
+		assertFalse(mutanteAdnService.procesar(adn), "1 sec, NO es mutante.");
+		
+		StatsAdnData stats = statsRepositorio.buscarStatsEnCache();
+		assertEquals(1, stats.getCantidadHumanos());
+		assertEquals(0, stats.getCantidadMutantes());
+		assertEquals(0, stats.getPorcentajeMutantes());
+		
+		AdnData saveData = adnDataRepositorio.buscarUltimo();
+		assertEquals(false, saveData.isMutante());
+		assertEquals(adn, saveData.getAdn());
 	}
 	
 	@Test
 	void debeValidarDosSecuenciaCon8LetrasIgualesEnMismaHorizontal() {
-		List<String> adn2 = List.of(
+		List<String> adn = List.of(
 				"AAAAAAAA",
 				"ATGACTAT",
 				"TTCCCTAT",
@@ -270,13 +402,22 @@ class MutanteAdnServiceTest {
 				"ATGACTAT",
 				"AACCCTAG",
 				"GGGGGGGG");
-		assertTrue(mutanteAdnService.isMutant(adn2), "2 sec, Es Mutante.");
+		assertTrue(mutanteAdnService.procesar(adn), "2 sec, Es Mutante.");
+		
+		StatsAdnData stats = statsRepositorio.buscarStatsEnCache();
+		assertEquals(1, stats.getCantidadHumanos());
+		assertEquals(1, stats.getCantidadMutantes());
+		assertEquals(1, stats.getPorcentajeMutantes());
+		
+		AdnData saveData = adnDataRepositorio.buscarUltimo();
+		assertEquals(true, saveData.isMutante());
+		assertEquals(adn, saveData.getAdn());
 		
 	}
 	
 	@Test
 	void debeValidarDosSecuenciaCon8LetrasIgualesEnMismaVertical() {
-		List<String> adn2 = List.of(
+		List<String> adn = List.of(
 				"ATGACTAT",
 				"AGGACTAT",
 				"ATCCCTAT",
@@ -285,7 +426,15 @@ class MutanteAdnServiceTest {
 				"ATGAATAT",
 				"AACTCTAG",
 				"AACTCTAG");
-		assertTrue(mutanteAdnService.isMutant(adn2), "2 sec, Es Mutante.");
+		assertTrue(mutanteAdnService.procesar(adn), "2 sec, Es Mutante.");
 		
+		StatsAdnData stats = statsRepositorio.buscarStatsEnCache();
+		assertEquals(1, stats.getCantidadHumanos());
+		assertEquals(1, stats.getCantidadMutantes());
+		assertEquals(1, stats.getPorcentajeMutantes());
+		
+		AdnData saveData = adnDataRepositorio.buscarUltimo();
+		assertEquals(true, saveData.isMutante());
+		assertEquals(adn, saveData.getAdn());
 	}
 }

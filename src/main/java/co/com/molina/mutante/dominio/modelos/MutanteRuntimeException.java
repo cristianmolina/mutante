@@ -1,6 +1,4 @@
-package co.com.molina.mutante;
-
-import co.com.molina.mutante.aplicacion.CodigoValidacionMutante;
+package co.com.molina.mutante.dominio.modelos;
 
 public class MutanteRuntimeException extends RuntimeException{
 

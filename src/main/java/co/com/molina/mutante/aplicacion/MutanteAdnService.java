@@ -1,19 +1,24 @@
 package co.com.molina.mutante.aplicacion;
 
-import java.util.Arrays;
 import java.util.List;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.NestedExceptionUtils;
 import org.springframework.stereotype.Service;
 
-import co.com.molina.mutante.MutanteRuntimeException;
+import co.com.molina.mutante.dominio.modelos.CodigoValidacionMutante;
+import co.com.molina.mutante.dominio.modelos.MutanteRuntimeException;
+import co.com.molina.mutante.infraestructura.repositorio.redis.AdnData;
+import co.com.molina.mutante.infraestructura.repositorio.redis.AdnDataRepositorio;
+import co.com.molina.mutante.infraestructura.repositorio.redis.StatsAdnDataRepositorio;
 
 /**
- * Lógica para determinar si una secuencia de ADN es mutante.
+ *  Determina si el adn tiene una estructura correcta y la guarda en base de datos.
+ *  Y si es valida indica si es un mutante.
  * 
  * @author Cristian Molina
  */
@@ -25,22 +30,42 @@ public class MutanteAdnService {
 	private static final Pattern PATRON_SECUENCIA_LETRAS = Pattern
 			.compile("([A]{4,9999})|([T]{4,9999})|([C]{4,9999})|([G]{4,9999})");
 
+	@Autowired
+	private AdnDataRepositorio adnDataRepositorio;
+	@Autowired
+	private StatsAdnDataRepositorio statsRepositorio;
+	
+	/**
+	 * Determina si el adn tiene una estructura correcta y la guarda en base de datos.
+	 * Y si es valida indica si es un mutante.
+	 * 
+	 * @param adn .
+	 * @return
+	 */
+	public boolean procesar(final List<String> adn) {
+		if (!this.validarAdnHumanoEstructuraCorrecta(adn)) {
+			return false;
+		}
+		
+		boolean esMutante = this.isMutant(adn);
+		AdnData adnData = adnDataRepositorio.registrarAdn(adn, esMutante);
+		statsRepositorio.registrarStats(adnData);
+		
+		return esMutante;
+	}
+	
 	/**
 	 * Determina si el adn es mutante.
 	 * 
 	 * @param adn .
 	 * @return
 	 */
-	public boolean isMutant(final List<String> adn) {
+	private boolean isMutant(final List<String> adn) {
 		if (adn == null) {
 			return false;
 		}
-
+		
 		int n = adn.size();
-
-		if (n < MINIMO_LETRAS_CONSECUTIVAS) {
-			return false;
-		}
 
 		try {
 			Long suma = cantidadSecuenciasMutantesHorizontal(adn, n, 0L);
@@ -56,6 +81,23 @@ public class MutanteAdnService {
 		} catch (Exception e) {
 			return false;
 		}
+	}
+
+	/**
+	 * Indica si el adn tiene una estructuraCorrecta
+	 * @param adn .
+	 * @return .
+	 */
+	private boolean validarAdnHumanoEstructuraCorrecta(final List<String> adn) {
+		if (adn == null) {
+			return false;
+		}
+		int n = adn.size();
+		
+		boolean adnNoValido = adn.parallelStream()
+				.anyMatch(cadena -> !PATRON_LETRAS_PERMITIDAS.matcher(cadena).matches() || cadena.length() != n);
+		
+		return !adnNoValido;
 	}
 
 	/**
