@@ -34,11 +34,11 @@ on:
 env:
   AWS_REGION: us-east-2                   # set this to your preferred AWS region, e.g. us-west-1
   ECR_REPOSITORY: mutante           # set this to your Amazon ECR repository name
-  ECS_SERVICE: mutante-service                 # set this to your Amazon ECS service name
-  ECS_CLUSTER: mutante-cluster                 # set this to your Amazon ECS cluster name
+  ECS_SERVICE: servicio-mutante                 # set this to your Amazon ECS service name
+  ECS_CLUSTER: cluster-mutante                 # set this to your Amazon ECS cluster name
   ECS_TASK_DEFINITION: .aws/task-definition.json # set this to the path to your Amazon ECS task definition
                                                # file, e.g. .aws/task-definition.json
-  CONTAINER_NAME: mutante           # set this to the name of the container in the
+  CONTAINER_NAME: contenedor-mutante           # set this to the name of the container in the
                                                # containerDefinitions section of your task definition
                                                
 
@@ -96,10 +96,11 @@ jobs:
         # Build a docker container and
         # push it to ECR so that it can
         # be deployed to ECS.
-        docker build -t mutante .
-        docker tag mutante:latest 553045868175.dkr.ecr.us-east-2.amazonaws.com/mutante:latest
-        docker push 553045868175.dkr.ecr.us-east-2.amazonaws.com/mutante:latest
-        echo "::set-output name=image::mutante:latest"
+        docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG .
+        docker tag $ECR_REPOSITORY:$IMAGE_TAG $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
+        docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
+        echo "::set-output name=image::$ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG"
+
 
 #    - name: Fill in the new image ID in the Amazon ECS task definition
 #      id: task-def
