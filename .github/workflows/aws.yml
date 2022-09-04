@@ -96,10 +96,9 @@ jobs:
         # Build a docker container and
         # push it to ECR so that it can
         # be deployed to ECS.
-        docker build -t $ECR_REPOSITORY .
-        docker tag $ECR_REPOSITORY:$IMAGE_TAG $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
-        docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
-        echo "::set-output name=image::$ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG"
+        docker build -t mutante .
+        docker tag mutante:latest 553045868175.dkr.ecr.us-east-2.amazonaws.com/$IMAGE_TAG
+        docker push 553045868175.dkr.ecr.us-east-2.amazonaws.com/mutante:$IMAGE_TAG
 
 
 #    - name: Fill in the new image ID in the Amazon ECS task definition
