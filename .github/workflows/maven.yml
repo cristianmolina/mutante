@@ -10,40 +10,26 @@ on:
     branches: [ "master" ]
 
 jobs:
-  container-job:
+  # Etiqueta del trabajo del ejecutor
+  runner-job:
+    # Debes usar un entorno Linux cuando utilices contenedores de servicio o trabajos de contenedor
     runs-on: ubuntu-latest
-    container: node:10.18-jessie
 
+    # Contenedores de servicio para ejecutar con `runner-job`
     services:
+      # Etiqueta usada para acceder al contenedor de servicio
       redis:
+        # Imagen de Docker Hub
         image: redis
-        # Set health checks to wait until redis has started
+        # Establece revisiones de estado para esperar hasta que Redis haya comenzado
         options: >-
           --health-cmd "redis-cli ping"
           --health-interval 10s
           --health-timeout 5s
           --health-retries 5
-
-    steps:
-      # Downloads a copy of the code in your repository before running CI tests
-      - name: Check out repository code
-        uses: actions/checkout@v3
-
-      # Performs a clean installation of all dependencies in the `package.json` file
-      # For more information, see https://docs.npmjs.com/cli/ci.html
-      - name: Install dependencies
-        run: npm ci
-
-      - name: Connect to Redis
-        # Runs a script that creates a Redis client, populates
-        # the client with data, and retrieves data
-        run: node client.js
-        # Environment variable used by the `client.js` script to create a new Redis client.
-        env:
-          # El nombre del host utilizado para comunicarse con el contenedor de servicio Redis
-          REDIS_HOST: redis
-          # El puerto Redis predeterminado
-          REDIS_PORT: 6379
+        ports:
+          # Asigna el puerto 6379 en el contenedor de servicio al host
+          - 6379:6379
   build:
 
     runs-on: ubuntu-latest
