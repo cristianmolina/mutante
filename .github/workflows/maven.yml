@@ -10,16 +10,10 @@ on:
     branches: [ "master" ]
 
 jobs:
-  # Etiqueta del trabajo del ejecutor
   runner-job:
-    # Debes usar un entorno Linux cuando utilices contenedores de servicio o trabajos de contenedor
     runs-on: ubuntu-latest
-
-    # Contenedores de servicio para ejecutar con `runner-job`
     services:
-      # Etiqueta usada para acceder al contenedor de servicio
       redis:
-        # Imagen de Docker Hub
         image: redis
         # Establece revisiones de estado para esperar hasta que Redis haya comenzado
         options: >-
