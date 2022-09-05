@@ -14,19 +14,23 @@ import org.springframework.web.bind.annotation.RestController;
 import co.com.molina.mutante.aplicacion.MutanteAdnService;
 
 @RestController
-@RequestMapping("/mutant")
 public class MutanteAdnRestController {
 
 	@Autowired
 	private MutanteAdnService mutanteAdnService;
 
-	@PostMapping(consumes = MediaType.APPLICATION_JSON_VALUE)
+	@PostMapping(path = "/mutant", consumes = MediaType.APPLICATION_JSON_VALUE)
 	public Object isMutant(@RequestBody List<String> adn) {
 
 		boolean esMutante = mutanteAdnService.procesar(adn);
 		
 		return esMutante ? ResponseEntity.status(HttpStatus.OK).body("SI_ES_MUTANTE.")
 				: ResponseEntity.status(HttpStatus.FORBIDDEN).body("NO_ES_MUTANTE.");
+	}
+	
+	@RequestMapping(path = "/stats", produces = MediaType.APPLICATION_JSON_VALUE)
+	public Object stats() {
+		return mutanteAdnService.estadisticas();
 	}
 
 }

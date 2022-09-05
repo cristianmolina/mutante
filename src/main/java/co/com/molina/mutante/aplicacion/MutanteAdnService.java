@@ -14,6 +14,7 @@ import co.com.molina.mutante.dominio.modelos.CodigoValidacionMutante;
 import co.com.molina.mutante.dominio.modelos.MutanteRuntimeException;
 import co.com.molina.mutante.infraestructura.repositorio.redis.AdnData;
 import co.com.molina.mutante.infraestructura.repositorio.redis.AdnDataRepositorio;
+import co.com.molina.mutante.infraestructura.repositorio.redis.StatsAdnData;
 import co.com.molina.mutante.infraestructura.repositorio.redis.StatsAdnDataRepositorio;
 
 /**
@@ -200,6 +201,10 @@ public class MutanteAdnService {
 				.parallel();
 		
 		return  cantidadSecuenciasMutantesHorizontal(convertirOblicuasEnHorizontalesStreamSentido1, n, sumaParcial);
+	}
+
+	public StatsAdnData estadisticas() {
+		return statsRepositorio.buscarStatsEnCache();
 	}
 
 }
