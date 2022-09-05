@@ -11,7 +11,7 @@ import org.springframework.stereotype.Service;
  * @author Cristian Molina
  *
  */
-//@Service
+@Service
 public class StatsAdnDataRepositorio {
 
 	private static final String ID_STATS = "STATS";

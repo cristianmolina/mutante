@@ -12,7 +12,7 @@ import org.springframework.stereotype.Service;
  * @author Cristian Molina
  *
  */
-//@Service
+@Service
 public class AdnDataRepositorio {
 
 	private static final String LISTA_ADNS = "LISTA_ADNS";

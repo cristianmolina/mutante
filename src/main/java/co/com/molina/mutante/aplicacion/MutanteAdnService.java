@@ -14,7 +14,6 @@ import co.com.molina.mutante.dominio.modelos.CodigoValidacionMutante;
 import co.com.molina.mutante.dominio.modelos.MutanteRuntimeException;
 import co.com.molina.mutante.infraestructura.repositorio.redis.AdnData;
 import co.com.molina.mutante.infraestructura.repositorio.redis.AdnDataRepositorio;
-import co.com.molina.mutante.infraestructura.repositorio.redis.StatsAdnData;
 import co.com.molina.mutante.infraestructura.repositorio.redis.StatsAdnDataRepositorio;
 
 /**
@@ -31,10 +30,10 @@ public class MutanteAdnService {
 	private static final Pattern PATRON_SECUENCIA_LETRAS = Pattern
 			.compile("([A]{4,9999})|([T]{4,9999})|([C]{4,9999})|([G]{4,9999})");
 
-//	@Autowired
-//	private AdnDataRepositorio adnDataRepositorio;
-//	@Autowired
-//	private StatsAdnDataRepositorio statsRepositorio;
+	@Autowired
+	private AdnDataRepositorio adnDataRepositorio;
+	@Autowired
+	private StatsAdnDataRepositorio statsRepositorio;
 	
 	/**
 	 * Determina si el adn tiene una estructura correcta y la guarda en base de datos.
@@ -49,8 +48,8 @@ public class MutanteAdnService {
 		}
 		
 		boolean esMutante = this.isMutant(adn);
-//		AdnData adnData = adnDataRepositorio.registrarAdn(adn, esMutante);
-//		statsRepositorio.registrarStats(adnData);
+		AdnData adnData = adnDataRepositorio.registrarAdn(adn, esMutante);
+		statsRepositorio.registrarStats(adnData);
 		
 		return esMutante;
 	}
@@ -201,15 +200,6 @@ public class MutanteAdnService {
 				.parallel();
 		
 		return  cantidadSecuenciasMutantesHorizontal(convertirOblicuasEnHorizontalesStreamSentido1, n, sumaParcial);
-	}
-
-	/**
-	 * Busca las estadisticas en cache.
-	 * @return
-	 */
-	public StatsAdnData estadisticas() {
-//		return statsRepositorio.buscarStatsEnCache();
-		return null;
 	}
 
 }
