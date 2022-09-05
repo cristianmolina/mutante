@@ -6,7 +6,7 @@ import org.springframework.data.redis.connection.ReactiveRedisConnectionFactory;
 import org.springframework.data.redis.core.ReactiveRedisOperations;
 import org.springframework.stereotype.Component;
 
-@Component
+//@Component
 public class AdnDataLoader {
   private final ReactiveRedisConnectionFactory factory;
   private final ReactiveRedisOperations<String, AdnData> adnDataOps;
