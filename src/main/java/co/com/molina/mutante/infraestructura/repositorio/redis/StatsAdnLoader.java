@@ -19,6 +19,5 @@ public class StatsAdnLoader {
   @PostConstruct
   public void loadData() {
 	  // carga inicial de datos.
-	  factory.getReactiveConnection().serverCommands().flushAll().subscribe(System.out::println);
   }
 }

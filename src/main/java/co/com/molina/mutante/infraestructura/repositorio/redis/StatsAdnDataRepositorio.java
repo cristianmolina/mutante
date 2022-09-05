@@ -43,7 +43,7 @@ public class StatsAdnDataRepositorio {
 
 		statsData.setCantidadHumanos(statsData.getCantidadHumanos() + 1);
 		statsData.setFechaCreacion(new Date());
-		statsData.setPorcentajeMutantes(statsData.getCantidadMutantes() / statsData.getCantidadHumanos());
+		statsData.setPorcentajeMutantes(Double.valueOf(statsData.getCantidadMutantes()) / Double.valueOf(statsData.getCantidadHumanos()));
 
 		statsAdnDataOps.opsForValue().set(statsData.getId(), statsData).block();
 		return statsData;

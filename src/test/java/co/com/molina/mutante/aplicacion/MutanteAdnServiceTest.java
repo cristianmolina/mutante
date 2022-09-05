@@ -67,7 +67,7 @@ class MutanteAdnServiceTest {
 		StatsAdnData stats = statsRepositorio.buscarStatsEnCache();
 		assertEquals(5, stats.getCantidadHumanos());
 		assertEquals(2, stats.getCantidadMutantes());
-		assertEquals(2/5, stats.getPorcentajeMutantes());
+		assertEquals(2D/5D, stats.getPorcentajeMutantes());
 		
 		AdnData saveData = adnDataRepositorio.buscarUltimo();
 		assertEquals(true, saveData.isMutante());
@@ -86,7 +86,7 @@ class MutanteAdnServiceTest {
 		StatsAdnData stats = statsRepositorio.buscarStatsEnCache();
 		assertEquals(5, stats.getCantidadHumanos());
 		assertEquals(2, stats.getCantidadMutantes());
-		assertEquals(2/5, stats.getPorcentajeMutantes());
+		assertEquals(2D/5D, stats.getPorcentajeMutantes());
 		
 		AdnData saveData = adnDataRepositorio.buscarUltimo();
 		assertEquals(true, saveData.isMutante());
@@ -244,7 +244,7 @@ class MutanteAdnServiceTest {
 		StatsAdnData stats = statsRepositorio.buscarStatsEnCache();
 		assertEquals(7, stats.getCantidadHumanos());
 		assertEquals(6, stats.getCantidadMutantes());
-		assertEquals(6/7, stats.getPorcentajeMutantes());
+		assertEquals(6D/7D, stats.getPorcentajeMutantes());
 		
 		AdnData saveData = adnDataRepositorio.buscarUltimo();
 		assertEquals(true, saveData.isMutante());
